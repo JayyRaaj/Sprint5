@@ -131,8 +131,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 323937535}
-  - component: {fileID: 323937536}
   - component: {fileID: 323937538}
+  - component: {fileID: 323937536}
   m_Layer: 0
   m_Name: Robot
   m_TagString: Untagged
@@ -313,6 +313,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_child: {fileID: 850345906}
+  rotationAxis: {x: 0, y: 1, z: 0}
+  minAngle: -180
+  maxAngle: 180
+  currentAngle: 0
 --- !u!1 &578576954
 GameObject:
   m_ObjectHideFlags: 0
@@ -541,6 +545,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_child: {fileID: 1738884307}
+  rotationAxis: {x: 0, y: 1, z: 0}
+  minAngle: -180
+  maxAngle: 180
+  currentAngle: 0
 --- !u!1 &960394798
 GameObject:
   m_ObjectHideFlags: 0
@@ -869,7 +877,6 @@ GameObject:
   - component: {fileID: 1146840877}
   - component: {fileID: 1146840876}
   - component: {fileID: 1146840875}
-  - component: {fileID: 1146840874}
   m_Layer: 0
   m_Name: Base
   m_TagString: Untagged
@@ -893,20 +900,6 @@ Transform:
   - {fileID: 386827771}
   m_Father: {fileID: 323937535}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1146840874
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1146840872}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 533cd0fac75f1dc4098dd7cf4e653f3b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 578576958}
-  rotationSpeed: 5
 --- !u!135 &1146840875
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1208,6 +1201,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_child: {fileID: 0}
+  rotationAxis: {x: 0, y: 1, z: 0}
+  minAngle: -180
+  maxAngle: 180
+  currentAngle: 0
 --- !u!136 &1717091176
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1330,6 +1327,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_child: {fileID: 1717091175}
+  rotationAxis: {x: 0, y: 1, z: 0}
+  minAngle: -180
+  maxAngle: 180
+  currentAngle: 0
 --- !u!4 &1738884308
 Transform:
   m_ObjectHideFlags: 0
