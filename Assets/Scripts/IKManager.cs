@@ -14,7 +14,7 @@ public class IKManager : MonoBehaviour
 
     public float m_threshold = 0.05f;
 
-    
+    public float m_rate = 5.0f;
 
     float CalculateSlope(Joint _joint)
     {
@@ -35,10 +35,18 @@ public class IKManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (GetDistance(m_end.transform.position, m_target.transform.position) > m_threshold)
+        // if (GetDistance(m_end.transform.position, m_target.transform.position) > m_threshold)
+        // {
+        //     float slope = CalculateSlope(m_root);
+        //     m_root.transform.Rotate(Vector3.up, -slope * m_rate); // Adjust axis if needed
+        // }
+        Joint current = m_root;
+        while(current != null)
         {
-            float slope = CalculateSlope(m_root);
-            m_root.transform.Rotate(Vector3.up, -slope); // Adjust axis if needed
+            float slope = CalculateSlope(current);
+            current.Rotate(-slope * m_rate);
+            current = current.GetChild(); 
+ 
         }
     }
 
