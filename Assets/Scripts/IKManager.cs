@@ -16,6 +16,8 @@ public class IKManager : MonoBehaviour
 
     public float m_rate = 5.0f;
 
+    public int m_steps = 24;
+
     float CalculateSlope(Joint _joint)
     {
         float deltaTheta = 0.01f;
@@ -35,17 +37,20 @@ public class IKManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (GetDistance(m_end.transform.position, m_target.transform.position) > m_threshold)
-        {
-        Joint current = m_root;
-        while(current != null)
-        {
-            float slope = CalculateSlope(current);
-            current.Rotate(-slope * m_rate);
-            current = current.GetChild(); 
- 
+        for ( int i = 0; i< m_steps; i++){
+    if (GetDistance(m_end.transform.position, m_target.transform.position) > m_threshold)
+            {
+            Joint current = m_root;
+            while(current != null)
+            {
+                float slope = CalculateSlope(current);
+                current.Rotate(-slope * m_rate);
+                current = current.GetChild(); 
+    
+            }
         }
         }
+        
     }
 
     float GetDistance(Vector3 _point1, Vector3 _point2)
