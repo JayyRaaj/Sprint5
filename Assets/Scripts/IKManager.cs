@@ -17,6 +17,10 @@ public class IKManager : MonoBehaviour
     public float m_rate = 5.0f;
     public int m_steps = 24;
 
+    // Arm length parameters
+    public float m_maxReach = 9f;  // 3 arms * 3 units each
+    public float m_minReach = 0f;   // Assuming the robot can fully fold
+
     float CalculateSlope(Joint _joint)
     {
         float deltaTheta = 0.01f;
@@ -35,19 +39,35 @@ public class IKManager : MonoBehaviour
 
     void Update()
     {
-        // Perform inverse kinematics to move the arm toward the target
-        for (int i = 0; i < m_steps; i++)
+        // Calculate the distance from the root to the target
+        float targetDistance = GetDistance(m_root.transform.position, m_target.transform.position);
+
+        Debug.Log("Target Distance: " + targetDistance);
+        Debug.Log("Max Reach: " + m_maxReach);
+
+        // Check if the target is within the robot's reachable range
+        if (targetDistance <= m_maxReach && targetDistance >= m_minReach)
         {
-            if (GetDistance(m_end.transform.position, m_target.transform.position) > m_threshold)
+            Debug.Log("Target is within range.");
+            // Perform inverse kinematics to move the arm toward the target
+            for (int i = 0; i < m_steps; i++)
             {
-                Joint current = m_root;  // Start from the root joint
-                while (current != null)
+                if (GetDistance(m_end.transform.position, m_target.transform.position) > m_threshold)
                 {
-                    float slope = CalculateSlope(current);
-                    current.Rotate(-slope * m_rate);
-                    current = current.GetChild();  // Get the next joint in the chain
+                    Joint current = m_root;  // Start from the root joint
+                    while (current != null)
+                    {
+                        float slope = CalculateSlope(current);
+                        current.Rotate(-slope * m_rate);
+                        current = current.GetChild();  // Get the next joint in the chain
+                    }
                 }
             }
+        }
+        else
+        {
+            // Target is out of range
+            Debug.Log("Target is out of range!");
         }
     }
 
