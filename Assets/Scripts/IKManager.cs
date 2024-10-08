@@ -35,11 +35,8 @@ public class IKManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // if (GetDistance(m_end.transform.position, m_target.transform.position) > m_threshold)
-        // {
-        //     float slope = CalculateSlope(m_root);
-        //     m_root.transform.Rotate(Vector3.up, -slope * m_rate); // Adjust axis if needed
-        // }
+        if (GetDistance(m_end.transform.position, m_target.transform.position) > m_threshold)
+        {
         Joint current = m_root;
         while(current != null)
         {
@@ -47,6 +44,7 @@ public class IKManager : MonoBehaviour
             current.Rotate(-slope * m_rate);
             current = current.GetChild(); 
  
+        }
         }
     }
 
