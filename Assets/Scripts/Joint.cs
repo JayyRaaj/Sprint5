@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Joints : MonoBehaviour
+public class Joint : MonoBehaviour
 {
-    public Joints m_child;
+    public Joint m_child;
 
-    public Joints GetChild()
+    public Joint GetChild()
     {
         return m_child;
     }
