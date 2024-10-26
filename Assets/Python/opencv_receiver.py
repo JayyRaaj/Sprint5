@@ -154,6 +154,7 @@ def send_thread(ipaddr='127.0.0.1', bind_port=65403, destination_port=65402):
                         center_x = int(M["m10"] / M["m00"])
                         center_y = int(M["m01"] / M["m00"])
                         
+                        # Get depth at the center of the cube
                         depth = depth_image[center_y, center_x]
                         
                         # Adjust square size based on depth
