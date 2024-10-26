@@ -121,8 +121,70 @@ def send_thread(ipaddr='127.0.0.1', bind_port=65403, destination_port=65402):
             
             # do image processing here
             
-            # update the information needed for robot motion
-            outgoing_message = 'test message'.encode()
+            # Camera intrinsic parameters
+            fx = 668.0555
+            fy = 1002.083
+            cx = 240.5
+            cy = 251.5
+
+            if rgb_image is not None and depth_image is not None:
+                # Convert RGB image to HSV for color filtering
+                hsv_image = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2HSV)
+                
+                # Define red color range for detecting the cube
+                lower_red = np.array([0, 50, 50])
+                upper_red = np.array([10, 255, 255])
+                mask1 = cv2.inRange(hsv_image, lower_red, upper_red)
+                
+                lower_red2 = np.array([170, 50, 50])
+                upper_red2 = np.array([180, 255, 255])
+                mask2 = cv2.inRange(hsv_image, lower_red2, upper_red2)
+                
+                mask = mask1 | mask2
+
+                # Find contours on the mask
+                contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    # Get the largest contour, assuming it’s the cube
+                    cube_contour = max(contours, key=cv2.contourArea)
+                    
+                    # Calculate center of the cube
+                    M = cv2.moments(cube_contour)
+                    if M["m00"] > 0:
+                        center_x = int(M["m10"] / M["m00"])
+                        center_y = int(M["m01"] / M["m00"])
+                        
+                        # Draw a small green square around the center
+                        square_size = 100
+                        top_left = (center_x - square_size // 2, center_y - square_size // 2)
+                        bottom_right = (center_x + square_size // 2, center_y + square_size // 2)
+                        cv2.rectangle(rgb_image, top_left, bottom_right, (0, 255, 0), 2)
+                        
+                        # Display the RGB image with the detected box
+                        cv2.imshow("RGB Image with Detected Cube", rgb_image)
+                        cv2.waitKey(1)
+
+                        # Get depth at the center of the cube
+                        depth = depth_image[center_y, center_x]
+
+                        # Convert pixel coordinates and depth to 3D world coordinates
+                        X = (center_x - cx) * depth / fx
+                        Y = (center_y - cy) * depth / fy
+                        Z = depth
+                        
+                        # Prepare outgoing message with 3D coordinates
+                        outgoing_message = f"Cube Position: X={X:.2f}, Y={Y:.2f}, Z={Z:.2f}".encode()
+                    else:
+                        print("Cube not detected in the image.")
+                else:
+                    print("Cube not detected in the image.")
+
+
+
+
+            
+                        # update the information needed for robot motion
+                        # outgoing_message = 'test message'.encode()
             
 # ---------------------------------------------------------------------------- #
 #                         ADD YOUR CODE ABOVE THIS LINE                        #
