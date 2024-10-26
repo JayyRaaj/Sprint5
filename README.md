@@ -1,15 +1,20 @@
 # Unity Robot Simulation
 
+https://mavsuta-my.sharepoint.com/:f:/g/personal/jxg2371_mavs_uta_edu/Ejq84vZmNj9Lj-RewqHO6xgBv5YzBtQRYDduj_RywQERaA?e=vjyoYT
+
 ## Overview
-This project simulates a simple robot with an articulation body in Unity. The robot is designed to stand on a plane and interact with its environment while utilizing inverse kinematics to reach a target.
+Sprint 4 Camera Simulation in  Unity
 
 ## Features
-- **Articulation Body**: The robot uses Unity's Articulation Body component to simulate realistic joint movements.
-- **Dynamic Interaction**: The robot can reach for targets while maintaining its balance on a flat surface.
-- **Physics Simulation**: Utilizes Unity's physics engine to ensure accurate interactions with the environment.
+- **Camera Simulation**: Camera Simulation
 
 ## Implementation
 - Implemented Forward and Inverse Kinematics for the robotic arm
-- Implemented the Robot Arm from Scratch
+- Implemented the algorithm to detect object in RGB image space.
+- We can see the object based on depth
+- Implemented a Green Box based on where the image is located.
+
+![image](https://github.com/user-attachments/assets/44a5a325-4c36-47b7-bda6-ec6b73b4f8f0)
+
 
 ![image](https://github.com/user-attachments/assets/75d4aa0c-0414-48c2-bdb8-8ce781d55fab)
