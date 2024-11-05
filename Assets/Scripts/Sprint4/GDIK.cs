@@ -2,12 +2,16 @@ using UnityEngine;
 
 public class GradientDescentIK : MonoBehaviour
 {
-    public Transform[] joints;  // Array of joints in the robot arm
-    public Transform endEffector;  // The end effector of the robot
-    public Transform target;  // The target object to reach
-    public float learningRate = 0.5f;  // Adjusted learning rate
-    public float distanceThreshold = 0.05f;  // Slightly larger threshold
-    public int maxIterations = 1000;  // Maximum number of iterations
+    public Transform[] joints;              // Array of joints in the robot arm
+    public Transform endEffector;           // The end effector of the robot
+    public Transform target;                // The target cube to reach
+    public float learningRate = 0.3f;       // Adjusted learning rate
+    public float distanceThreshold = 0.05f; // Distance threshold to stop the algorithm
+    public int maxIterations = 1000;        // Maximum number of iterations
+
+    // Rotation limits for each joint (example values, adjust for your robot)
+    public float[] minZRotation;
+    public float[] maxZRotation;
 
     private void Update()
     {
@@ -18,7 +22,7 @@ public class GradientDescentIK : MonoBehaviour
     {
         int iteration = 0;
         float currentDistance = Vector3.Distance(endEffector.position, target.position);
-        
+
         while (currentDistance > distanceThreshold && iteration < maxIterations)
         {
             bool hasMoved = false;
@@ -28,25 +32,23 @@ public class GradientDescentIK : MonoBehaviour
                 // Calculate gradient for the current joint
                 float gradient = CalculateGradient(joints[i], endEffector, target.position);
 
-                // Log the gradient to observe its effect
-                Debug.Log($"Iteration {iteration}, Joint {i} gradient: {gradient}");
+                // Apply rotation around z-axis only with learning rate, then clamp
+                float newRotationZ = joints[i].localEulerAngles.z - gradient * learningRate;
+                newRotationZ = Mathf.Clamp(newRotationZ, minZRotation[i], maxZRotation[i]);
+                
+                // Set the new rotation while keeping x and y the same
+                joints[i].localEulerAngles = new Vector3(joints[i].localEulerAngles.x, joints[i].localEulerAngles.y, newRotationZ);
 
-                // Apply rotation if gradient is sufficient
-                if (Mathf.Abs(gradient) > 1e-3)  // Filter out tiny gradients
-                {
-                    joints[i].Rotate(0, 0, -gradient * learningRate, Space.Self);  // Only z-axis rotation
-                    hasMoved = true;
-                }
+                hasMoved = true;
             }
 
-            // Update the current distance and increment iteration count
+            // Recalculate distance and increase iteration count
             currentDistance = Vector3.Distance(endEffector.position, target.position);
             iteration++;
 
-            // Check if any joint moved; if not, break
             if (!hasMoved)
             {
-                Debug.LogWarning("No movement detected - consider further adjusting learning rate or axis constraints.");
+                Debug.LogWarning("No movement detected. Consider adjusting learning rate or constraints.");
                 break;
             }
         }
@@ -66,11 +68,11 @@ public class GradientDescentIK : MonoBehaviour
         // Save the current rotation
         Quaternion originalRotation = joint.rotation;
 
-        // Increase deltaTheta for clearer gradient calculation
+        // Small delta for gradient calculation
         float deltaTheta = 1.0f;
         joint.Rotate(0, 0, deltaTheta);  // Rotate around z-axis only
 
-        // Calculate the distance after the rotation
+        // Calculate the distance after the small rotation
         float distanceAfterRotation = Vector3.Distance(endEffector.position, targetPosition);
 
         // Restore the original rotation
