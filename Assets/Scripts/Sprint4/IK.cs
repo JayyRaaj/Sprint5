@@ -1,6 +1,5 @@
 using UnityEngine;
 
-
 public class NiryoOneIK : MonoBehaviour
 {
     public Transform target; // Reference to the Target cube
