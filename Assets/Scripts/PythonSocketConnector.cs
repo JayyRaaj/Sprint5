@@ -50,7 +50,7 @@ public class PythonSocketConnector : MonoBehaviour
             rgbQueue.Enqueue(CaptureObject.GetRGBTextureBytes());
             depthQueue.Enqueue(CaptureObject.GetDepthTextureBytes());
         }
-        Debug.Log(GetLastIncomingMessage());
+        // Debug.Log(GetLastIncomingMessage());
     }
 
     void RGBPublishingFunction()
