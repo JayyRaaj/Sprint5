@@ -7,96 +7,102 @@ public class NiryoOneIKCAM : MonoBehaviour
 {
     public Transform endEffector; // Reference to the end effector of the robot
     public ArticulationBody[] joints; // Array for all six joint articulations
-    public float threshold = 0.1f; // Distance threshold to consider end effector at the target
+    public float threshold = 0.01f; // Distance threshold to consider end effector at the target
     public int maxIterations = 10; // Maximum number of IK iterations per frame
-    public float stepSize = 5f; // Degree change per iteration for each joint
+    public float stepSize = 15f; // Degree change per iteration for each joint
 
     private Vector3 targetPosition; // The current target position from Python
-    private TcpListener listener;
-    private TcpClient client;
-    private NetworkStream stream;
-    private byte[] data;
+    private UdpClient udpClient;
+    private IPEndPoint endPoint;
 
     void Start()
     {
-        // Initialize the socket listener to receive position data from Python
-        listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 12345); // Adjust the port number as needed
-        listener.Start();
-        Debug.Log("Server started... Waiting for data.");
+        // Initialize the UDP client to receive position data from Python
+        udpClient = new UdpClient(65402); // Adjust the port number as needed
+        endPoint = new IPEndPoint(IPAddress.Any, 65402);
+        Debug.Log("UDP Server started... Waiting for data.");
     }
 
     void Update()
     {
-        if (listener.Pending())
+        try
         {
-            // Accept incoming connection
-            client = listener.AcceptTcpClient();
-            stream = client.GetStream();
-            data = new byte[client.ReceiveBufferSize];
-            stream.Read(data, 0, data.Length);
-            string receivedData = Encoding.ASCII.GetString(data);
-            Debug.Log("Received Data: " + receivedData);
+            if (udpClient.Available > 0)
+            {
+                // Receive data from Python
+                byte[] data = udpClient.Receive(ref endPoint);
+                string receivedData = Encoding.ASCII.GetString(data).TrimEnd('\0');
+                Debug.Log("Received Data: " + receivedData);
 
-            // Parse the position data (expecting the format [x, y, z])
-            string[] positionData = receivedData.Trim(new char[] { '[', ']' }).Split(',');
-            float x = float.Parse(positionData[0]);
-            float y = float.Parse(positionData[1]);
-            float z = float.Parse(positionData[2]);
+                // Parse the position data (expecting the format [x, y, z])
+                string[] positionData = receivedData.Trim(new char[] { '[', ']' }).Split(',');
 
-            targetPosition = new Vector3(x, y, z); // Update the target position
+                if (positionData.Length == 3 &&
+                    float.TryParse(positionData[0], out float x) &&
+                    float.TryParse(positionData[1], out float y) &&
+                    float.TryParse(positionData[2], out float z))
+                {
+                    targetPosition = new Vector3(x, y, z); // Update the target position
+                    Debug.Log("Parsed Target Position: " + targetPosition);
 
-            // Move the arm to the new target position
-            PerformInverseKinematics();
+                    // Move the arm to the new target position
+                    PerformInverseKinematics();
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.Log("Error receiving data: " + ex.Message);
         }
     }
 
     private void PerformInverseKinematics()
     {
-        // If the end effector is already close enough to the target, stop the calculation
-        if (Vector3.Distance(endEffector.position, targetPosition) < threshold)
+        float initialDistance = Vector3.Distance(endEffector.position, targetPosition);
+        if (initialDistance < threshold)
+        {
+            Debug.Log("Target already within threshold, no movement needed.");
             return;
+        }
 
-        // Perform the IK iterations to move the arm towards the target
         for (int iteration = 0; iteration < maxIterations; iteration++)
         {
+            bool closeEnough = false;
+
             for (int i = joints.Length - 1; i >= 0; i--)
             {
                 ArticulationBody joint = joints[i];
-
-                // Get direction vectors
                 Vector3 toEndEffector = endEffector.position - joint.transform.position;
                 Vector3 toTarget = targetPosition - joint.transform.position;
 
-                // Calculate the rotation angle to bring the end effector closer to the target
                 float angle = Vector3.SignedAngle(toEndEffector, toTarget, joint.transform.up);
-
-                // Limit the angle to stepSize to ensure gradual movement
                 angle = Mathf.Clamp(angle, -stepSize, stepSize);
 
-                // Apply rotation to the joint
                 Quaternion rotation = Quaternion.AngleAxis(angle, joint.transform.up);
                 joint.transform.rotation = rotation * joint.transform.rotation;
 
-                // Update the articulation body joint angle
                 var drive = joint.xDrive;
-                drive.target = angle;
+                drive.target += angle;
                 joint.xDrive = drive;
 
-                // Check if the end effector is close enough to the target
                 if (Vector3.Distance(endEffector.position, targetPosition) < threshold)
-                    return;
+                {
+                    closeEnough = true;
+                    Debug.Log("End effector reached target within threshold.");
+                    break;
+                }
             }
+
+            if (closeEnough)
+                break;
         }
+
+        Debug.Log("Final Distance to Target: " + Vector3.Distance(endEffector.position, targetPosition));
     }
 
     private void OnApplicationQuit()
     {
-        // Clean up and close the connection when the application is quit
-        if (client != null)
-        {
-            stream.Close();
-            client.Close();
-        }
-        listener.Stop();
+        udpClient.Close();
+        Debug.Log("UDP Server stopped.");
     }
 }
