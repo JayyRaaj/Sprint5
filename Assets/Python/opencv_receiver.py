@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import socket
 import traceback
+import socket 
 
 INTERRUPT = False
 THREAD_LOCK = threading.Lock()
@@ -120,85 +121,86 @@ def send_thread(ipaddr='127.0.0.1', bind_port=65403, destination_port=65402):
 # ---------------------------------------------------------------------------- #
             
             # do image processing here
-            
-            # Camera intrinsic parameters
-            fx = 668.0555
-            fy = 1002.083
-            cx = 240.5
-            cy = 251.5
-
+          
+                       
             if rgb_image is not None and depth_image is not None:
-                # Convert RGB image to HSV for color filtering
+                # Convert RGB image to HSV for easier color detection
                 hsv_image = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2HSV)
-                
-                # Define red color range for detecting the cube
-                lower_red = np.array([0, 50, 50])
+
+                # Define the range for the red color in HSV space
+                lower_red = np.array([0, 120, 70])
                 upper_red = np.array([10, 255, 255])
                 mask1 = cv2.inRange(hsv_image, lower_red, upper_red)
-                
-                lower_red2 = np.array([170, 50, 50])
-                upper_red2 = np.array([180, 255, 255])
-                mask2 = cv2.inRange(hsv_image, lower_red2, upper_red2)
-                
-                mask = mask1 | mask2
+                lower_red = np.array([170, 120, 70])
+                upper_red = np.array([180, 255, 255])
+                mask2 = cv2.inRange(hsv_image, lower_red, upper_red)
+                mask = mask1 | mask2  # Combine the masks for red color detection
 
-                # Find contours on the mask
+                # Find contours in the mask
                 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+                # Debug: Check if red color contours are found
+                print(f"Number of red contours found: {len(contours)}")
+
+                # If contours are found, get the largest one, assuming it's the target cube
                 if contours:
-                    # Get the largest contour, assuming it’s the cube
-                    cube_contour = max(contours, key=cv2.contourArea)
+                    largest_contour = max(contours, key=cv2.contourArea)
                     
-                    # Calculate center of the cube
-                    M = cv2.moments(cube_contour)
-                    if M["m00"] > 0:
-                        center_x = int(M["m10"] / M["m00"])
-                        center_y = int(M["m01"] / M["m00"])
-                        
-                        # Get depth at the center of the cube
-                        depth = depth_image[center_y, center_x]
-                        
-                        # Adjust square size based on depth
-                        min_box_size = 10
-                        max_box_size = 100
-                        scaling_factor = 500
+                    # Debug: Display the area of the largest contour
+                    print(f"Largest contour area: {cv2.contourArea(largest_contour)}")
+                    
+                    # Get the bounding box of the largest contour
+                    x, y, w, h = cv2.boundingRect(largest_contour)
+                    # Calculate the center of the bounding box
+                    target_x = x + w // 2
+                    target_y = y + h // 2
 
-                        # Dynamic box size calculation based on inverse of depth
-                        if depth > 0:
-                            # Adjust square size with safe cast using np.clip
-                            square_size = max(min_box_size, min(max_box_size, int(scaling_factor / (depth + 1))))
+                    # Debug: Print the detected center position of the target in the image
+                    print(f"Target detected at pixel (x, y): ({target_x}, {target_y})")
 
-                        else:
-                            square_size = max_box_size  # Default to max size if depth is zero or invalid
-                            
-                        top_left = (center_x - square_size // 2, center_y - square_size // 2)
-                        bottom_right = (center_x + square_size // 2, center_y + square_size // 2)
-                        cv2.rectangle(rgb_image, top_left, bottom_right, (0, 255, 0), 2)
+                    # Now, use depth information to get the 3D position of the target
+                    depth_value = depth_image[target_y, target_x]
+                    
+                    # Debug: Print the depth value at the target's position
+                    print(f"Depth value at target position: {depth_value}")
 
-                        # Display the RGB image with the detected box
-                        cv2.imshow("RGB Image with Detected Cube", rgb_image)
-                        cv2.waitKey(1)
-                        
-                        # Convert pixel coordinates and depth to 3D world coordinates
-                        X = (center_x - cx) * depth / fx
-                        Y = (center_y - cy) * depth / fy
-                        Z = depth
-                        
-                        # Prepare outgoing message with 3D coordinates
-                        outgoing_message = f"Cube Position: X={X:.2f}, Y={Y:.2f}, Z={Z:.2f}".encode()
+                    # Apply camera intrinsic parameters for 3D position estimation
+                    fx = 347.0574
+                    fy = 520.5861
+                    cx = 271
+                    cy = 242
+                    
+                    # Calculate the 3D coordinates (X, Y, Z) from the depth image
+                    Z = depth_value  # Depth value in meters (assuming the depth image is in meters)
+                    X = (target_x - cx) * Z / fx
+                    Y = (target_y - cy) * Z / fy
+                    
+                    # Debug: Print the calculated 3D position
+                    print(f"3D Target Position: X={X}, Y={Y}, Z={Z}")
 
-                    else:
-                        print("Cube not detected in the image.")
+                    # Create a message with the 3D position of the target
+                    target_position = struct.pack('fff', X, Y, Z)
+                    
+                    # Send the position data to Unity (you can use a different port if necessary)
+                    udp_socket.sendto(target_position, (ipaddr, destination_port))
+                    
+                    # Debug: Confirm that position data has been sent
+                    print("Target 3D position sent to Unity.")
                 else:
-                    print("Cube not detected in the image.")
+                    # Debug: No target detected
+                    print("No target detected.")
+            else:
+                # Debug: Image frames are not ready for processing
+                print("Waiting for RGB and Depth frames to be available...")
 
-                        # update the information needed for robot motion
-                        # outgoing_message = 'test message'.encode()
+
             
+           
 # ---------------------------------------------------------------------------- #
 #                         ADD YOUR CODE ABOVE THIS LINE                        #
 # ---------------------------------------------------------------------------- #
 
-            udp_socket.sendto(outgoing_message, (ipaddr, destination_port))
+            # udp_socket.sendto(outgoing_message, (ipaddr, destination_port))
         except Exception:
             # print(traceback.format_exc())
             # probably garbled frame, ignore
@@ -226,4 +228,3 @@ if __name__ == '__main__':
         
     
 
-    
