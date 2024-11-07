@@ -85,11 +85,11 @@ def depth_func(ipaddr='127.0.0.1', port=65401):
             frame = np.frombuffer(frame_data, np.uint8)
             frame = cv2.imdecode(frame, cv2.IMREAD_UNCHANGED)
             frame = frame[:, :, 2]
-            # print(f'Minimum depth: {np.min(frame)}, Maximum depth: {np.max(frame)}')
+            print(f'Minimum depth: {np.min(frame)}, Maximum depth: {np.max(frame)}')
             frame = cv2.normalize(frame, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
             # display the image
-            # cv2.imshow('Depth Image', frame)
-            # cv2.waitKey(1)
+            cv2.imshow('Depth Image', frame)
+            cv2.waitKey(1)
             # save the image
             with THREAD_LOCK:
                 global DEPTH_FRAME
@@ -122,85 +122,70 @@ def send_thread(ipaddr='127.0.0.1', bind_port=65403, destination_port=65402):
             
             # do image processing here
           
-                       
+           # Ensure both RGB and depth images are available
             if rgb_image is not None and depth_image is not None:
-                # Convert RGB image to HSV for easier color detection
+                # Convert RGB image to HSV for color detection
                 hsv_image = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2HSV)
 
-                # Define the range for the red color in HSV space
-                lower_red = np.array([0, 120, 70])
-                upper_red = np.array([10, 255, 255])
-                mask1 = cv2.inRange(hsv_image, lower_red, upper_red)
-                lower_red = np.array([170, 120, 70])
-                upper_red = np.array([180, 255, 255])
-                mask2 = cv2.inRange(hsv_image, lower_red, upper_red)
-                mask = mask1 | mask2  # Combine the masks for red color detection
+                # Define the HSV range for red color
+                lower_red1 = np.array([0, 120, 70])
+                upper_red1 = np.array([10, 255, 255])
+                mask1 = cv2.inRange(hsv_image, lower_red1, upper_red1)
 
-                # Find contours in the mask
+                lower_red2 = np.array([170, 120, 70])
+                upper_red2 = np.array([180, 255, 255])
+                mask2 = cv2.inRange(hsv_image, lower_red2, upper_red2)
+
+                # Combine masks
+                mask = mask1 | mask2
+
+                # Find contours
                 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                print(f"Number of red contours found: {len(contours)}")  # Debug statement
 
-                # Debug: Check if red color contours are found
-                print(f"Number of red contours found: {len(contours)}")
-
-                # If contours are found, get the largest one, assuming it's the target cube
+                # Proceed if contours are found
                 if contours:
                     largest_contour = max(contours, key=cv2.contourArea)
-                    
-                    # Debug: Display the area of the largest contour
-                    print(f"Largest contour area: {cv2.contourArea(largest_contour)}")
-                    
-                    # Get the bounding box of the largest contour
+                    print(f"Largest contour area: {cv2.contourArea(largest_contour)}")  # Debug
+
+                    # Get bounding box of the largest contour
                     x, y, w, h = cv2.boundingRect(largest_contour)
-                    # Calculate the center of the bounding box
                     target_x = x + w // 2
                     target_y = y + h // 2
 
-                    # Debug: Print the detected center position of the target in the image
-                    print(f"Target detected at pixel (x, y): ({target_x}, {target_y})")
+                    print(f"Target detected at pixel (x, y): ({target_x}, {target_y})")  # Debug
 
-                    # Now, use depth information to get the 3D position of the target
+                    # Use depth information for 3D positioning
                     depth_value = depth_image[target_y, target_x]
-                    
-                    # Debug: Print the depth value at the target's position
-                    print(f"Depth value at target position: {depth_value}")
+                    print(f"Depth value at target position: {depth_value}")  # Debug
 
-                    # Apply camera intrinsic parameters for 3D position estimation
+                    # Camera intrinsics
                     fx = 347.0574
                     fy = 520.5861
                     cx = 271
                     cy = 242
                     
-                    # Calculate the 3D coordinates (X, Y, Z) from the depth image
-                    Z = depth_value  # Depth value in meters (assuming the depth image is in meters)
+                    # Convert to 3D world coordinates
+                    Z = depth_value
                     X = (target_x - cx) * Z / fx
                     Y = (target_y - cy) * Z / fy
-                    
-                    # Debug: Print the calculated 3D position
-                    print(f"3D Target Position: X={X}, Y={Y}, Z={Z}")
 
-                    # Create a message with the 3D position of the target
-                    target_position = struct.pack('fff', X, Y, Z)
-                    
-                    # Send the position data to Unity (you can use a different port if necessary)
+                    # Prepare the message
+                    target_position = target_position = f"[{X}, {Y}, {Z}]".encode('ascii')
+
+                    # Send to Unity
                     udp_socket.sendto(target_position, (ipaddr, destination_port))
-                    
-                    # Debug: Confirm that position data has been sent
-                    print("Target 3D position sent to Unity.")
+                    print("Target 3D position sent to Unity.")  # Debug
                 else:
-                    # Debug: No target detected
-                    print("No target detected.")
+                    print("No target detected.")  # Debug
             else:
-                # Debug: Image frames are not ready for processing
-                print("Waiting for RGB and Depth frames to be available...")
-
-
+                print("Waiting for RGB and Depth frames to be available...")  
             
            
 # ---------------------------------------------------------------------------- #
 #                         ADD YOUR CODE ABOVE THIS LINE                        #
 # ---------------------------------------------------------------------------- #
 
-            # udp_socket.sendto(outgoing_message, (ipaddr, destination_port))
         except Exception:
             # print(traceback.format_exc())
             # probably garbled frame, ignore
