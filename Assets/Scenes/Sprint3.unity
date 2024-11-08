@@ -8486,7 +8486,7 @@ CapsuleCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Radius: 0.5
   m_Height: 2
@@ -8551,7 +8551,7 @@ Transform:
   m_GameObject: {fileID: 1345970370}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.001, y: 0.435, z: 0.3171868}
+  m_LocalPosition: {x: 0.001, y: 0.913, z: 0.3171868}
   m_LocalScale: {x: 0.010084084, y: 0.010084084, z: 0.010084084}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8564,7 +8564,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1345970370}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ed9dc686e157aee418872ebec67c7615, type: 3}
   m_Name: 
@@ -9448,7 +9448,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1513797177}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1dc9f8f917b1f434b870197ba3fd362e, type: 3}
   m_Name: 
@@ -9460,12 +9460,25 @@ MonoBehaviour:
   - {fileID: 682754119}
   - {fileID: 1678759407}
   - {fileID: 402708800}
-  target: {fileID: 1721662483}
+  jointLimitsLower:
+  - -175
+  - -90
+  - -80
+  - -175
+  - -100
+  - -147.5
+  jointLimitsUpper:
+  - 175
+  - 36.7
+  - 90
+  - 175
+  - 110
+  - 147.5
+  endEffector: {fileID: 1450457412}
+  targetDot: {fileID: 1721662483}
+  learningRate: 0.1
   maxIterations: 1000
-  positionThreshold: 0.01
-  orientationThreshold: 0.01
-  learningRate: 2
-  jointAngles: []
+  positionThreshold: 0.001
 --- !u!114 &1513797182
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9473,11 +9486,12 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1513797177}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c681b337cf69e7d40a8ebcc352028acd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  jointValues: []
   joints:
   - {fileID: 1664354942}
   - {fileID: 1544098841}
@@ -9486,16 +9500,15 @@ MonoBehaviour:
   - {fileID: 1678759407}
   - {fileID: 402708800}
   endEffectorDot: {fileID: 1345970370}
+  trajectoryResolution: 0.1
   shoulder_link: 0
   arm_link: 0
   elbow_link: 0
   forearm_link: 0
   wrist_link: 0
   hand_link: 0
-  showJointAxes: 0
-  showEndEffector: 0
-  axisLength: 0.05
-  jointSphereRadius: 0.01
+  resultingPosition: {x: 0, y: 0, z: 0}
+  resultingOrientation: {x: 0, y: 0, z: 0}
 --- !u!1 &1532546588
 GameObject:
   m_ObjectHideFlags: 8
@@ -11392,7 +11405,7 @@ SphereCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
@@ -11455,8 +11468,8 @@ Transform:
   m_GameObject: {fileID: 1721662483}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.151, y: 0.418, z: 0.27976975}
-  m_LocalScale: {x: 0.0460732, y: 0.0460732, z: 0.0460732}
+  m_LocalPosition: {x: 0, y: 0.4049, z: 0.3124}
+  m_LocalScale: {x: 0.02159359, y: 0.02159359, z: 0.02159359}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

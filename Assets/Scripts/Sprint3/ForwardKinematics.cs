@@ -14,7 +14,7 @@ public class NiryoFK : MonoBehaviour
 
     // Slider fields for joint control
     [Range(-175, 175)] public float shoulder_link = 0; 
-    [Range(-90, 36.5f)] public float arm_link = 0; 
+    [Range(-80, 90)] public float arm_link = 0; 
     [Range(-80, 90)] public float elbow_link = 0;
     [Range(-175, 175)] public float forearm_link = 0;
     [Range(-100, 110)] public float wrist_link = 0;
