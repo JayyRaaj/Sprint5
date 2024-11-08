@@ -9,7 +9,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import socket
 import traceback
-import socket 
 
 INTERRUPT = False
 THREAD_LOCK = threading.Lock()
@@ -47,12 +46,13 @@ def rgb_func(ipaddr='127.0.0.1', port=65400):
             start_idx = frame_data.find(EOM_MARKER)
             end_idx = frame_data.find(EOM_MARKER, start_idx + 1)
             frame_data = frame_data[start_idx + len(EOM_MARKER):end_idx]
-            # decode JPEG image
-            nparr = np.frombuffer(frame_data, np.uint8)
-            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            # display the image
-            # cv2.imshow('RGB Image', frame)
-            # cv2.waitKey(1)
+            # decode the image using cv2.imread()
+            try:
+                nparr = np.frombuffer(frame_data, np.uint8)
+                frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            except Exception as e:
+                print(f"Error decoding image: {e}")
+                continue
             # save the image
             with THREAD_LOCK:
                 global RGB_FRAME
@@ -81,15 +81,15 @@ def depth_func(ipaddr='127.0.0.1', port=65401):
             start_idx = frame_data.find(EOM_MARKER)
             end_idx = frame_data.find(EOM_MARKER, start_idx + 1)
             frame_data = frame_data[start_idx + len(EOM_MARKER):end_idx]
-            # decode EXR ZIP image
-            frame = np.frombuffer(frame_data, np.uint8)
-            frame = cv2.imdecode(frame, cv2.IMREAD_UNCHANGED)
-            frame = frame[:, :, 2]
-            print(f'Minimum depth: {np.min(frame)}, Maximum depth: {np.max(frame)}')
-            frame = cv2.normalize(frame, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
-            # display the image
-            cv2.imshow('Depth Image', frame)
-            cv2.waitKey(1)
+            # decode the image using cv2.imread()
+            try:
+                nparr = np.frombuffer(frame_data, np.uint8)
+                frame = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
+                frame = frame[:, :, 2]
+                frame = cv2.normalize(frame, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+            except Exception as e:
+                print(f"Error decoding depth frame: {e}")
+                continue
             # save the image
             with THREAD_LOCK:
                 global DEPTH_FRAME
@@ -120,73 +120,51 @@ def send_thread(ipaddr='127.0.0.1', bind_port=65403, destination_port=65402):
 #                         ADD YOUR CODE BELOW THIS LINE                        #
 # ---------------------------------------------------------------------------- #
             
-            # do image processing here
-          
-           # Ensure both RGB and depth images are available
+            # Process the RGB image to identify a red target
             if rgb_image is not None and depth_image is not None:
-                # Convert RGB image to HSV for color detection
                 hsv_image = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2HSV)
-
-                # Define the HSV range for red color
-                lower_red1 = np.array([0, 120, 70])
-                upper_red1 = np.array([10, 255, 255])
-                mask1 = cv2.inRange(hsv_image, lower_red1, upper_red1)
-
-                lower_red2 = np.array([170, 120, 70])
-                upper_red2 = np.array([180, 255, 255])
-                mask2 = cv2.inRange(hsv_image, lower_red2, upper_red2)
-
-                # Combine masks
-                mask = mask1 | mask2
-
-                # Find contours
-                contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                print(f"Number of red contours found: {len(contours)}")  # Debug statement
-
-                # Proceed if contours are found
+                lower_red = np.array([0, 100, 100])
+                upper_red = np.array([10, 255, 255])
+                mask = cv2.inRange(hsv_image, lower_red, upper_red)
+                contours, _ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
                 if contours:
+                    # Find the largest red contour
                     largest_contour = max(contours, key=cv2.contourArea)
-                    print(f"Largest contour area: {cv2.contourArea(largest_contour)}")  # Debug
-
-                    # Get bounding box of the largest contour
-                    x, y, w, h = cv2.boundingRect(largest_contour)
-                    target_x = x + w // 2
-                    target_y = y + h // 2
-
-                    print(f"Target detected at pixel (x, y): ({target_x}, {target_y})")  # Debug
-
-                    # Use depth information for 3D positioning
-                    depth_value = depth_image[target_y, target_x]
-                    print(f"Depth value at target position: {depth_value}")  # Debug
-
-                    # Camera intrinsics
-                    fx = 347.0574
-                    fy = 520.5861
-                    cx = 271
-                    cy = 242
-                    
-                    # Convert to 3D world coordinates
-                    Z = depth_value
-                    X = (target_x - cx) * Z / fx
-                    Y = (target_y - cy) * Z / fy
-
-                    # Prepare the message
-                    target_position = target_position = f"[{X}, {Y}, {Z}]".encode('ascii')
-
-                    # Send to Unity
-                    udp_socket.sendto(target_position, (ipaddr, destination_port))
-                    print("Target 3D position sent to Unity.")  # Debug
+                    # Calculate the centroid of the red target
+                    M = cv2.moments(largest_contour)
+                    if M["m00"] != 0:
+                        cx = int(M["m10"] / M["m00"])
+                        cy = int(M["m01"] / M["m00"])
+                        # Draw a green box around the red target
+                        x, y, w, h = cv2.boundingRect(largest_contour)
+                        cv2.rectangle(rgb_image, (x, y), (x+w, y+h), (0, 255, 0), 2)
+                        # Get the depth value at the centroid
+                        depth = depth_image[cy, cx]
+                        # Calculate the world position of the target
+                        world_x = (cx - IMAGE_WIDTH // 2) * depth / 525
+                        world_y = (cy - IMAGE_HEIGHT // 2) * depth / 525
+                        world_z = depth
+                        # Send the world position to Unity
+                        outgoing_message = f"target_x={world_x:.2f},target_y={world_y:.2f},target_z={world_z:.2f}".encode()
+                        udp_socket.sendto(outgoing_message, (ipaddr, destination_port))
+                        print(f"Sent target world position: ({world_x:.2f}, {world_y:.2f}, {world_z:.2f})")
+                    else:
+                        # No red target found
+                        outgoing_message = b"no_target"
+                        udp_socket.sendto(outgoing_message, (ipaddr, destination_port))
+                        print("No red target found")
                 else:
-                    print("No target detected.")  # Debug
-            else:
-                print("Waiting for RGB and Depth frames to be available...")  
+                    # No red target found
+                    outgoing_message = b"no_target"
+                    udp_socket.sendto(outgoing_message, (ipaddr, destination_port))
+                    print("No red target found")
             
-           
 # ---------------------------------------------------------------------------- #
 #                         ADD YOUR CODE ABOVE THIS LINE                        #
 # ---------------------------------------------------------------------------- #
 
-        except Exception:
+        except Exception as e:
+            print(f"Error in send_thread: {e}")
             # print(traceback.format_exc())
             # probably garbled frame, ignore
             pass
@@ -210,6 +188,3 @@ if __name__ == '__main__':
         rbg_thread.join()
         send_thread.join()
         exit(0)
-        
-    
-

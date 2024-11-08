@@ -18,8 +18,8 @@ public class NiryoOneIKCAM : MonoBehaviour
     void Start()
     {
         // Initialize the UDP client to receive position data from Python
-        udpClient = new UdpClient(65402); // Adjust the port number as needed
-        endPoint = new IPEndPoint(IPAddress.Any, 65402);
+        udpClient = new UdpClient(65409); // Adjust the port number as needed
+        endPoint = new IPEndPoint(IPAddress.Any, 65409);
         Debug.Log("UDP Server started... Waiting for data.");
     }
 
@@ -32,7 +32,7 @@ public class NiryoOneIKCAM : MonoBehaviour
                 // Receive data from Python
                 byte[] data = udpClient.Receive(ref endPoint);
                 string receivedData = Encoding.ASCII.GetString(data).TrimEnd('\0');
-                Debug.Log("Received Data: " + receivedData);
+                Debug.Log($"Received Data from Python: {receivedData}");
 
                 // Parse the position data (expecting the format [x, y, z])
                 string[] positionData = receivedData.Trim(new char[] { '[', ']' }).Split(',');
@@ -43,22 +43,28 @@ public class NiryoOneIKCAM : MonoBehaviour
                     float.TryParse(positionData[2], out float z))
                 {
                     targetPosition = new Vector3(x, y, z); // Update the target position
-                    Debug.Log("Parsed Target Position: " + targetPosition);
+                    Debug.Log($"Parsed Target Position: X={x}, Y={y}, Z={z}");
 
                     // Move the arm to the new target position
                     PerformInverseKinematics();
+                }
+                else
+                {
+                    Debug.Log("Data received, but parsing failed. Check data format.");
                 }
             }
         }
         catch (System.Exception ex)
         {
-            Debug.Log("Error receiving data: " + ex.Message);
+            Debug.Log($"Error receiving data: {ex.Message}");
         }
     }
 
     private void PerformInverseKinematics()
     {
         float initialDistance = Vector3.Distance(endEffector.position, targetPosition);
+        Debug.Log($"Initial Distance to Target: {initialDistance}");
+
         if (initialDistance < threshold)
         {
             Debug.Log("Target already within threshold, no movement needed.");
@@ -85,6 +91,8 @@ public class NiryoOneIKCAM : MonoBehaviour
                 drive.target += angle;
                 joint.xDrive = drive;
 
+                Debug.Log($"Rotated joint {i} by {angle} degrees.");
+
                 if (Vector3.Distance(endEffector.position, targetPosition) < threshold)
                 {
                     closeEnough = true;
@@ -97,7 +105,7 @@ public class NiryoOneIKCAM : MonoBehaviour
                 break;
         }
 
-        Debug.Log("Final Distance to Target: " + Vector3.Distance(endEffector.position, targetPosition));
+        Debug.Log($"Final Distance to Target: {Vector3.Distance(endEffector.position, targetPosition)}");
     }
 
     private void OnApplicationQuit()
