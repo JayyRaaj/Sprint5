@@ -1,16 +1,24 @@
 import socket
+import time
 
-# Define the UDP settings
-ip_address = "127.0.0.1"  # Localhost
-port = 65409  # Port number that Unity is listening to
+# UDP socket configuration
+UDP_IP = "127.0.0.1"  # Localhost or IP of the machine running Unity
+UDP_PORT = 65402      # Port number should match Unity's port
 
-# Example target position in [X, Y, Z] format
-target_position = "[10.07510197907686234, -0.1510823369026184, 0.457275390625]"
-
-# Convert the message to bytes
-message = target_position.encode('ascii')
-
-# Create a UDP socket and send the data
+# Create a socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.sendto(message, (ip_address, port))
-print("Sent target position:", target_position)
+
+# Sample target position data to send
+positions = [
+    "[0.158, 0.51, -0.438]",  # Position matching the Unity target position
+  
+]
+
+# Send data in a loop to test connection
+for pos in positions:
+    sock.sendto(pos.encode('utf-8'), (UDP_IP, UDP_PORT))
+    print(f"Sent position data: {pos}")
+    time.sleep(1)  # Delay for readability and testing
+
+# Close the socket after testing
+sock.close()

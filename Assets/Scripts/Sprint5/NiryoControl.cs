@@ -1,84 +1,44 @@
 using UnityEngine;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using System;
 
-public class NiryoOneControl : MonoBehaviour
+public class SimpleCCDInverseKinematics : MonoBehaviour
 {
-    public Transform[] joints; // Array of robot joints
-    public Transform endEffector; // End-effector transform
-    public float learningRate = 0.05f; // Learning rate for movement adjustment
-    public float threshold = 0.01f; // Threshold to stop movement
-    private Vector3 targetPosition; // Target position in 3D space
-    private bool positionReceived = false;
+    public Transform[] joints;        // Array of joint transforms
+    public Transform target;          // Target position for the end effector
+    public float tolerance = 0.01f;   // Allowable distance error
+    public float maxRotationSpeed = 5f;  // Maximum rotation speed for convergence
+    public float damping = 0.9f;      // Damping factor for smooth stopping
 
-    private UdpClient udpClient;
-    private Thread receiveThread;
-    private int port = 65402; // Port to match Python sender
-
-    void Start()
+    private void Update()
     {
-        udpClient = new UdpClient(port);
-        receiveThread = new Thread(new ThreadStart(ReceiveData));
-        receiveThread.IsBackground = true;
-        receiveThread.Start();
+        SimpleCyclicCoordinateDescent();
     }
 
-    void Update()
+    void SimpleCyclicCoordinateDescent()
     {
-        // Move the end-effector only if a position is received
-        if (positionReceived && Vector3.Distance(endEffector.position, targetPosition) > threshold)
-        {
-            MoveToTarget();
-        }
-    }
+        float distanceToTarget = Vector3.Distance(joints[joints.Length - 1].position, target.position);
 
-    private void ReceiveData()
-    {
-        IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, port);
-        while (true)
+        // Loop until the end effector is close enough to the target
+        while (distanceToTarget > tolerance)
         {
-            try
+            // Iterate from the end effector to the base joint
+            for (int i = joints.Length - 2; i >= 0; i--)  // Skip the end effector joint
             {
-                byte[] data = udpClient.Receive(ref endPoint);
+                // Calculate vectors from the current joint to the end effector and to the target
+                Vector3 toEndEffector = joints[joints.Length - 1].position - joints[i].position;
+                Vector3 toTarget = target.position - joints[i].position;
 
-                if (data.Length == 12) // Expecting 3 floats (4 bytes each)
-                {
-                    float x = BitConverter.ToSingle(data, 0);
-                    float y = BitConverter.ToSingle(data, 4);
-                    float z = BitConverter.ToSingle(data, 8);
+                // Calculate rotation to bring the end effector closer to the target
+                Quaternion rotationToTarget = Quaternion.FromToRotation(toEndEffector, toTarget);
 
-                    targetPosition = new Vector3(x, y, z);
-                    positionReceived = true;
-                    Debug.Log($"Received target position: X={x}, Y={y}, Z={z}");
-                }
+                // Smoothly interpolate rotation with damping
+                Quaternion smoothRotation = Quaternion.Slerp(joints[i].rotation, rotationToTarget * joints[i].rotation, damping * Time.deltaTime);
+
+                // Rotate the joint towards the target with a maximum speed limit
+                joints[i].rotation = Quaternion.RotateTowards(joints[i].rotation, smoothRotation, maxRotationSpeed * Time.deltaTime);
             }
-            catch (Exception ex)
-            {
-                Debug.Log("Error receiving data: " + ex.Message);
-            }
+
+            // Update distance for stopping condition
+            distanceToTarget = Vector3.Distance(joints[joints.Length - 1].position, target.position);
         }
-    }
-
-    private void MoveToTarget()
-    {
-        for (int i = joints.Length - 1; i >= 0; i--)
-        {
-            Vector3 jointPos = joints[i].position;
-            Vector3 endEffectorPos = endEffector.position;
-            Vector3 toTarget = targetPosition - endEffectorPos;
-            Vector3 toEndEffector = endEffectorPos - jointPos;
-
-            // Calculate gradient (cross-product magnitude as an approximation for gradient descent step)
-            float gradient = Vector3.Cross(toEndEffector, toTarget).magnitude;
-            joints[i].Rotate(Vector3.up, -learningRate * gradient);
-        }
-    }
-
-    private void OnApplicationQuit()
-    {
-        receiveThread.Abort();
-        udpClient.Close();
     }
 }

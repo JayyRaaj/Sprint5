@@ -1299,6 +1299,7 @@ GameObject:
   - component: {fileID: 309478812}
   - component: {fileID: 309478815}
   - component: {fileID: 309478816}
+  - component: {fileID: 309478817}
   m_Layer: 0
   m_Name: niryo_one
   m_TagString: robot
@@ -1396,7 +1397,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 309478811}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a0bc8288c4fb58443809adb5925a5e9f, type: 3}
   m_Name: 
@@ -1412,6 +1413,29 @@ MonoBehaviour:
   threshold: 0.1
   maxIterations: 100
   stepSize: 1
+--- !u!114 &309478817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 309478811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27f39a4c50b53524198a9ee074adc1a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  joints:
+  - {fileID: 1073910834}
+  - {fileID: 434695107}
+  - {fileID: 137171188}
+  - {fileID: 1567614138}
+  - {fileID: 1422776434}
+  - {fileID: 1572460553}
+  target: {fileID: 1212395280}
+  endEffector: {fileID: 1127218480}
+  learningRate: 0.05
+  tolerance: 0.001
 --- !u!1 &334946377
 GameObject:
   m_ObjectHideFlags: 0

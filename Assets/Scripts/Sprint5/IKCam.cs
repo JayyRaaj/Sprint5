@@ -18,47 +18,63 @@ public class NiryoOneIKCAM : MonoBehaviour
     void Start()
     {
         // Initialize the UDP client to receive position data from Python
-        udpClient = new UdpClient(65409); // Adjust the port number as needed
-        endPoint = new IPEndPoint(IPAddress.Any, 65409);
+        udpClient = new UdpClient(65402); // Adjust the port number as needed
+        endPoint = new IPEndPoint(IPAddress.Any, 65402);
         Debug.Log("UDP Server started... Waiting for data.");
     }
 
-    void Update()
+   void Update()
+{
+    if (udpClient == null)
     {
-        try
+        Debug.LogError("UDP Client is not initialized.");
+        return;
+    }
+
+    if (endEffector == null)
+    {
+        Debug.LogError("End Effector is not assigned in the Inspector.");
+        return;
+    }
+
+    if (joints == null || joints.Length == 0)
+    {
+        Debug.LogError("Joints array is not assigned or empty.");
+        return;
+    }
+
+    try
+    {
+        if (udpClient.Available > 0)
         {
-            if (udpClient.Available > 0)
+            byte[] data = udpClient.Receive(ref endPoint);
+            string receivedData = Encoding.ASCII.GetString(data).TrimEnd('\0');
+            Debug.Log($"Received Data from Python: {receivedData}");
+
+            string[] positionData = receivedData.Trim(new char[] { '[', ']' }).Split(',');
+
+            if (positionData.Length == 3 &&
+                float.TryParse(positionData[0], out float x) &&
+                float.TryParse(positionData[1], out float y) &&
+                float.TryParse(positionData[2], out float z))
             {
-                // Receive data from Python
-                byte[] data = udpClient.Receive(ref endPoint);
-                string receivedData = Encoding.ASCII.GetString(data).TrimEnd('\0');
-                Debug.Log($"Received Data from Python: {receivedData}");
+                targetPosition = new Vector3(x, y, z);
+                Debug.Log($"Parsed Target Position: X={x}, Y={y}, Z={z}");
 
-                // Parse the position data (expecting the format [x, y, z])
-                string[] positionData = receivedData.Trim(new char[] { '[', ']' }).Split(',');
-
-                if (positionData.Length == 3 &&
-                    float.TryParse(positionData[0], out float x) &&
-                    float.TryParse(positionData[1], out float y) &&
-                    float.TryParse(positionData[2], out float z))
-                {
-                    targetPosition = new Vector3(x, y, z); // Update the target position
-                    Debug.Log($"Parsed Target Position: X={x}, Y={y}, Z={z}");
-
-                    // Move the arm to the new target position
-                    PerformInverseKinematics();
-                }
-                else
-                {
-                    Debug.Log("Data received, but parsing failed. Check data format.");
-                }
+                PerformInverseKinematics();
+            }
+            else
+            {
+                Debug.Log("Data received, but parsing failed. Check data format.");
             }
         }
-        catch (System.Exception ex)
-        {
-            Debug.Log($"Error receiving data: {ex.Message}");
-        }
     }
+    catch (System.Exception ex)
+    {
+        Debug.LogError($"Error receiving data: {ex.Message}");
+    }
+}
+
 
     private void PerformInverseKinematics()
     {
