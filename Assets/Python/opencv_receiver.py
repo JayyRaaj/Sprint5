@@ -121,8 +121,56 @@ def send_thread(ipaddr='127.0.0.1', bind_port=65403, destination_port=65402):
             
             # do image processing here
             
-            # update the information needed for robot motion
-            outgoing_message = 'test message'.encode()
+            fx = 317.6024
+            fy = 476.4035
+            cx = 248
+            cy = 185.5
+
+            
+            # Convert images to process in the current loop
+            if rgb_image is not None and depth_image is not None:
+                # Convert the RGB image to HSV color space to detect red
+                hsv_image = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2HSV)
+                
+                # Define HSV range for red color (adjust as needed)
+                lower_red = np.array([0, 120, 70])
+                upper_red = np.array([10, 255, 255])
+                mask1 = cv2.inRange(hsv_image, lower_red, upper_red)
+
+                lower_red = np.array([170, 120, 70])
+                upper_red = np.array([180, 255, 255])
+                mask2 = cv2.inRange(hsv_image, lower_red, upper_red)
+                
+                # Combine masks to capture all shades of red
+                red_mask = mask1 + mask2
+                
+                # Find contours in the mask to locate the red object
+                contours, _ = cv2.findContours(red_mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                
+                if contours:
+                    # Assume the largest contour is the red object
+                    largest_contour = max(contours, key=cv2.contourArea)
+                    
+                    # Draw a green bounding box around the red object
+                    x, y, w, h = cv2.boundingRect(largest_contour)
+                    cv2.rectangle(rgb_image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    
+                    # Calculate the depth at the center of the bounding box
+                    depth_value = depth_image[y + h // 2, x + w // 2]
+                    
+                    # Convert pixel coordinates and depth to world position (adjust as per your setup)
+                    world_x = (x + w // 2 - IMAGE_WIDTH / 2) * depth_value / fx
+                    world_y = (y + h // 2 - IMAGE_HEIGHT / 2) * depth_value / fy
+                    world_z = depth_value
+                    
+                    # Prepare the outgoing message with world coordinates
+                    outgoing_message = f"[{world_x}, {world_y}, {world_z}]".encode()
+                    
+                    print("Outgoing message", outgoing_message)
+                    
+                    # Display the RGB image with bounding box
+                    cv2.imshow('Detected Red Cube', rgb_image)
+                    cv2.waitKey(1)
             
 # ---------------------------------------------------------------------------- #
 #                         ADD YOUR CODE ABOVE THIS LINE                        #
