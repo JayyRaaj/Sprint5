@@ -659,7 +659,7 @@ ArticulationBody:
   m_ImplicitTensor: 1
   m_Immovable: 0
   m_UseGravity: 1
-  m_CollisionDetectionMode: 0
+  m_CollisionDetectionMode: 3
 --- !u!114 &137171191
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1298,8 +1298,7 @@ GameObject:
   - component: {fileID: 309478813}
   - component: {fileID: 309478812}
   - component: {fileID: 309478815}
-  - component: {fileID: 309478817}
-  - component: {fileID: 309478818}
+  - component: {fileID: 309478816}
   m_Layer: 0
   m_Name: niryo_one
   m_TagString: robot
@@ -1390,32 +1389,7 @@ MonoBehaviour:
   threshold: 0.005
   maxIterations: 100
   stepSize: 1
---- !u!114 &309478817
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 309478811}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27f39a4c50b53524198a9ee074adc1a8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 1212395280}
-  joints:
-  - {fileID: 1073910834}
-  - {fileID: 434695107}
-  - {fileID: 137171188}
-  - {fileID: 1567614138}
-  - {fileID: 1422776434}
-  - {fileID: 1572460553}
-  endEffector: {fileID: 1127218480}
-  stepSize: 0.1
-  maxIterations: 5000
-  ikTolerance: 0.02
-  maxIKIterations: 200
---- !u!114 &309478818
+--- !u!114 &309478816
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1424,40 +1398,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 309478811}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc89943c7e0b0244fa370be4ec28e1a1, type: 3}
+  m_Script: {fileID: 11500000, guid: 74a15b01c4f9a6b4b95f8398cb0faa6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseFrame: {fileID: 1031288446}
   joints:
-  - {fileID: 1073910834}
-  - {fileID: 434695107}
-  - {fileID: 137171188}
-  - {fileID: 1567614138}
-  - {fileID: 1422776434}
-  - {fileID: 1572460553}
-  jointMinLimits:
-  - -175.0002
-  - -109.9999
-  - -80.06999
-  - -175.0002
-  - -100
-  - -147.5
-  jointMaxLimits:
-  - 175.0002
-  - 36.68
-  - 90
-  - 175.0002
-  - 109.99
-  - 147.5
+  - {fileID: 1073910836}
+  - {fileID: 434695109}
+  - {fileID: 137171190}
+  - {fileID: 1567614140}
+  - {fileID: 1422776436}
+  - {fileID: 1572460555}
   endEffector: {fileID: 1127218480}
-  targetPosition: {fileID: 1212395280}
-  stepSize: 0.1
-  maxIterations: 1000
-  goalThreshold: 0.05
-  obstacles:
-  - {fileID: 2014029646}
-  obstacleRadius: 0.1
-  jointRadius: 0.05
+  target: {fileID: 1212395280}
+  threshold: 0.005
+  maxIterations: 100
+  rotationStep: 1
+  stepSize: 5
 --- !u!1 &334946377
 GameObject:
   m_ObjectHideFlags: 0
@@ -2700,7 +2656,7 @@ ArticulationBody:
   m_ImplicitTensor: 1
   m_Immovable: 0
   m_UseGravity: 1
-  m_CollisionDetectionMode: 0
+  m_CollisionDetectionMode: 3
 --- !u!114 &434695110
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5821,7 +5777,7 @@ ArticulationBody:
   m_ImplicitTensor: 1
   m_Immovable: 0
   m_UseGravity: 1
-  m_CollisionDetectionMode: 0
+  m_CollisionDetectionMode: 3
 --- !u!114 &1073910837
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5998,7 +5954,7 @@ ArticulationBody:
   m_ImplicitTensor: 1
   m_Immovable: 0
   m_UseGravity: 1
-  m_CollisionDetectionMode: 0
+  m_CollisionDetectionMode: 3
 --- !u!114 &1127218483
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6850,7 +6806,7 @@ ArticulationBody:
   m_ImplicitTensor: 1
   m_Immovable: 0
   m_UseGravity: 1
-  m_CollisionDetectionMode: 0
+  m_CollisionDetectionMode: 3
 --- !u!114 &1260237703
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7512,7 +7468,7 @@ ArticulationBody:
   m_ImplicitTensor: 1
   m_Immovable: 0
   m_UseGravity: 1
-  m_CollisionDetectionMode: 0
+  m_CollisionDetectionMode: 3
 --- !u!114 &1422776437
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8199,7 +8155,7 @@ ArticulationBody:
   m_ImplicitTensor: 1
   m_Immovable: 0
   m_UseGravity: 1
-  m_CollisionDetectionMode: 0
+  m_CollisionDetectionMode: 3
 --- !u!114 &1567614141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8331,7 +8287,7 @@ ArticulationBody:
   m_ImplicitTensor: 1
   m_Immovable: 0
   m_UseGravity: 1
-  m_CollisionDetectionMode: 0
+  m_CollisionDetectionMode: 3
 --- !u!114 &1572460556
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9546,6 +9502,7 @@ GameObject:
   - component: {fileID: 2014029645}
   - component: {fileID: 2014029644}
   - component: {fileID: 2014029643}
+  - component: {fileID: 2014029647}
   m_Layer: 0
   m_Name: Collision Plane
   m_TagString: Untagged
@@ -9633,12 +9590,34 @@ Transform:
   m_GameObject: {fileID: 2014029642}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.098, y: 0.201, z: -0.742}
+  m_LocalPosition: {x: -0.113, y: 0.201, z: -0.035}
   m_LocalScale: {x: 0.007990876, y: 0.59272665, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!64 &2014029647
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2014029642}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 1
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!1 &2021887611 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5088657249392287222, guid: 5ebef98a1ec0f482a9a064ef7ffba9c6, type: 3}
