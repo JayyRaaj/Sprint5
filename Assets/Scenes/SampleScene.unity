@@ -1298,8 +1298,8 @@ GameObject:
   - component: {fileID: 309478813}
   - component: {fileID: 309478812}
   - component: {fileID: 309478815}
-  - component: {fileID: 309478816}
   - component: {fileID: 309478817}
+  - component: {fileID: 309478818}
   m_Layer: 0
   m_Name: niryo_one
   m_TagString: robot
@@ -1322,7 +1322,7 @@ MonoBehaviour:
   selectedJoint: 
   selectedIndex: 0
   control: 0
-  stiffness: 1000000
+  stiffness: 1000
   damping: 100
   forceLimit: 1000
   speed: 0.01
@@ -1390,7 +1390,7 @@ MonoBehaviour:
   threshold: 0.005
   maxIterations: 100
   stepSize: 1
---- !u!114 &309478816
+--- !u!114 &309478817
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1399,21 +1399,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 309478811}
   m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a0bc8288c4fb58443809adb5925a5e9f, type: 3}
+  m_Script: {fileID: 11500000, guid: 27f39a4c50b53524198a9ee074adc1a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  endEffector: {fileID: 1127218480}
+  target: {fileID: 1212395280}
   joints:
-  - {fileID: 1073910836}
-  - {fileID: 434695109}
-  - {fileID: 137171190}
-  - {fileID: 1567614140}
-  - {fileID: 1422776436}
-  - {fileID: 1572460555}
-  threshold: 0.1
-  maxIterations: 100
-  stepSize: 1
---- !u!114 &309478817
+  - {fileID: 1073910834}
+  - {fileID: 434695107}
+  - {fileID: 137171188}
+  - {fileID: 1567614138}
+  - {fileID: 1422776434}
+  - {fileID: 1572460553}
+  endEffector: {fileID: 1127218480}
+  stepSize: 0.1
+  maxIterations: 5000
+  ikTolerance: 0.02
+  maxIKIterations: 200
+--- !u!114 &309478818
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1422,9 +1424,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 309478811}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 27f39a4c50b53524198a9ee074adc1a8, type: 3}
+  m_Script: {fileID: 11500000, guid: dc89943c7e0b0244fa370be4ec28e1a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  baseFrame: {fileID: 1031288446}
   joints:
   - {fileID: 1073910834}
   - {fileID: 434695107}
@@ -1432,10 +1435,29 @@ MonoBehaviour:
   - {fileID: 1567614138}
   - {fileID: 1422776434}
   - {fileID: 1572460553}
-  target: {fileID: 1212395280}
+  jointMinLimits:
+  - -175.0002
+  - -109.9999
+  - -80.06999
+  - -175.0002
+  - -100
+  - -147.5
+  jointMaxLimits:
+  - 175.0002
+  - 36.68
+  - 90
+  - 175.0002
+  - 109.99
+  - 147.5
   endEffector: {fileID: 1127218480}
-  learningRate: 0.05
-  tolerance: 0.001
+  targetPosition: {fileID: 1212395280}
+  stepSize: 0.1
+  maxIterations: 1000
+  goalThreshold: 0.05
+  obstacles:
+  - {fileID: 2014029646}
+  obstacleRadius: 0.1
+  jointRadius: 0.05
 --- !u!1 &334946377
 GameObject:
   m_ObjectHideFlags: 0
@@ -6526,7 +6548,7 @@ Transform:
   m_GameObject: {fileID: 1212395276}
   serializedVersion: 2
   m_LocalRotation: {x: -0.0030088935, y: -0, z: -0, w: 0.99999547}
-  m_LocalPosition: {x: 0.158, y: 0.51, z: -0.438}
+  m_LocalPosition: {x: -0.172, y: 0.387, z: 0.205}
   m_LocalScale: {x: 0.04213189, y: 0.04200423, z: 0.03605336}
   m_ConstrainProportionsScale: 0
   m_Children: []
