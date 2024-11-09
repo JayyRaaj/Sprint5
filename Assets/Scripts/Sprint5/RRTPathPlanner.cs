@@ -1,66 +1,81 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CCDIKWithArticulation : MonoBehaviour
+public class RRTPathfinder
 {
-    public ArticulationBody[] joints;      // Array of joint articulation bodies, from base to end effector
-    public Transform endEffector;          // End-effector of the robot
-    public Transform target;               // Target position for the end-effector
-    public float threshold = 0.01f;        // How close the end effector should be to the target
-    public int maxIterations = 10;         // Maximum iterations per update
-    public float rotationStep = 1.0f;      // Step size for joint rotation adjustments
-    public float stepSize = 5f; // Degree change per iteration for each joint
+    private Vector3 start;
+    private Vector3 target;
+    private float stepSize;
+    private int maxIterations;
+    private LayerMask obstacleLayer;
+    private float obstacleRadius;
 
-
-    void Update()
+    public RRTPathfinder(Vector3 start, Vector3 target, float stepSize, int maxIterations, LayerMask obstacleLayer, float obstacleRadius)
     {
-        if (Vector3.Distance(endEffector.position, target.position) > threshold)
-            PerformCCD();
+        this.start = start;
+        this.target = target;
+        this.stepSize = stepSize;
+        this.maxIterations = maxIterations;
+        this.obstacleLayer = obstacleLayer;
+        this.obstacleRadius = obstacleRadius;
     }
 
-    private void PerformCCD()
-{
-    if (Vector3.Distance(endEffector.position, target.position) < threshold)
-        return; // End effector is close enough to the target
-
-    for (int iteration = 0; iteration < maxIterations; iteration++)
+    public List<Vector3> FindPath()
     {
-        for (int i = joints.Length - 1; i >= 0; i--)
+        List<Vector3> path = new List<Vector3> { start };
+        Vector3 currentPos = start;
+
+        for (int i = 0; i < maxIterations; i++)
         {
-            ArticulationBody joint = joints[i];
+            Vector3 randomPoint = GetRandomPoint();
+            Vector3 closestPoint = GetClosestPoint(path, randomPoint);
+            Vector3 newPoint = Vector3.MoveTowards(closestPoint, randomPoint, stepSize);
 
-            // Get direction vectors
-            Vector3 toEndEffector = endEffector.position - joint.transform.position;
-            Vector3 toTarget = target.position - joint.transform.position;
-
-            // Check for obstacles in the direction of movement
-            bool isObstacleDetected = Physics.Raycast(joint.transform.position, toTarget.normalized, toTarget.magnitude);
-            if (isObstacleDetected)
+            if (!Physics.CheckSphere(newPoint, obstacleRadius, obstacleLayer))
             {
-                // If there's an obstacle, slightly adjust the target angle
-                toTarget = Quaternion.Euler(0, stepSize, 0) * toTarget; // Rotate slightly to avoid the obstacle
+                path.Add(newPoint);
+                currentPos = newPoint;
+
+                if (Vector3.Distance(newPoint, target) < stepSize)
+                {
+                    path.Add(target);
+                    break;
+                }
             }
-
-            // Calculate rotation angle to bring end effector closer to target
-            float angle = Vector3.SignedAngle(toEndEffector, toTarget, joint.transform.up);
-
-            // Limit the angle to stepSize to ensure gradual movement
-            angle = Mathf.Clamp(angle, -stepSize, stepSize);
-
-            // Apply rotation to the joint
-            Quaternion rotation = Quaternion.AngleAxis(angle, joint.transform.up);
-            joint.transform.rotation = rotation * joint.transform.rotation;
-
-            // Update articulation body joint angle
-            var drive = joint.xDrive;
-            drive.target = angle;
-            joint.xDrive = drive;
-
-            // Check if the end effector is close enough to the target
-            if (Vector3.Distance(endEffector.position, target.position) < threshold)
-                return;
         }
-    }
-}
 
+        if (path.Count == 1)
+        {
+            Debug.LogError("Path could not be generated. Check obstacle layer and parameters.");
+        }
+
+        return path;
+    }
+
+    private Vector3 GetRandomPoint()
+    {
+        return new Vector3(
+            Random.Range(start.x - 10, target.x + 10),
+            Random.Range(start.y - 10, target.y + 10),
+            Random.Range(start.z - 10, target.z + 10)
+        );
+    }
+
+    private Vector3 GetClosestPoint(List<Vector3> path, Vector3 point)
+    {
+        Vector3 closest = path[0];
+        float minDist = Vector3.Distance(point, closest);
+
+        foreach (Vector3 p in path)
+        {
+            float dist = Vector3.Distance(point, p);
+            if (dist < minDist)
+            {
+                minDist = dist;
+                closest = p;
+            }
+        }
+
+        return closest;
+    }
 }
