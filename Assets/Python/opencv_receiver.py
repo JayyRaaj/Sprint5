@@ -119,81 +119,62 @@ def send_thread(ipaddr='127.0.0.1', bind_port=65403, destination_port=65402):
 #                         ADD YOUR CODE BELOW THIS LINE                        #
 # ---------------------------------------------------------------------------- #
             
-            # do image processing here
-            
-            # Camera intrinsic parameters
-            fx = 668.0555
-            fy = 1002.083
-            cx = 240.5
-            cy = 251.5
+            # Camera intrinsics
+            fx, fy = 264.4264, 396.6396
+            cx, cy = 229, 185.5
+            outgoing_message = b"0,0,0"  # Default message if no object is detected
 
-            if rgb_image is not None and depth_image is not None:
-                # Convert RGB image to HSV for color filtering
+            # Convert RGB to HSV
+            if rgb_image is not None:
                 hsv_image = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2HSV)
-                
-                # Define red color range for detecting the cube
-                lower_red = np.array([0, 50, 50])
+                # Define red color range in HSV
+                lower_red = np.array([0, 120, 70])
                 upper_red = np.array([10, 255, 255])
                 mask1 = cv2.inRange(hsv_image, lower_red, upper_red)
-                
-                lower_red2 = np.array([170, 50, 50])
-                upper_red2 = np.array([180, 255, 255])
-                mask2 = cv2.inRange(hsv_image, lower_red2, upper_red2)
-                
-                mask = mask1 | mask2
+                lower_red = np.array([170, 120, 70])
+                upper_red = np.array([180, 255, 255])
+                mask2 = cv2.inRange(hsv_image, lower_red, upper_red)
+                red_mask = mask1 | mask2
 
-                # Find contours on the mask
-                contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                if contours:
-                    # Get the largest contour, assuming it’s the cube
-                    cube_contour = max(contours, key=cv2.contourArea)
+                # Apply mask to isolate red cube in the RGB frame
+                red_rgb = cv2.bitwise_and(rgb_image, rgb_image, mask=red_mask)
+                cv2.imshow('Filtered Red Image', red_rgb)
+                cv2.waitKey(1)
+
+                # Use depth frame to filter the red cube based on distance
+                if depth_image is not None:
+                    # Set depth thresholds (adjust as needed)
+                    min_depth = 50  # lower limit
+                    max_depth = 150  # upper limit
+                    depth_filtered = cv2.inRange(depth_image, min_depth, max_depth)
+
+                    # Combine color and depth mask
+                    combined_mask = cv2.bitwise_and(red_mask, depth_filtered)
                     
-                    # Calculate center of the cube
-                    M = cv2.moments(cube_contour)
-                    if M["m00"] > 0:
-                        center_x = int(M["m10"] / M["m00"])
-                        center_y = int(M["m01"] / M["m00"])
-                        
-                        # Get depth at the center of the cube
-                        depth = depth_image[center_y, center_x]
-                        
-                        # Adjust square size based on depth
-                        min_box_size = 10
-                        max_box_size = 100
-                        scaling_factor = 500
+                    # Find contours in the mask
+                    contours, _ = cv2.findContours(combined_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-                        # Dynamic box size calculation based on inverse of depth
-                        if depth > 0:
-                            # Adjust square size with safe cast using np.clip
-                            square_size = max(min_box_size, min(max_box_size, int(scaling_factor / (depth + 1))))
-
-                        else:
-                            square_size = max_box_size  # Default to max size if depth is zero or invalid
-                            
-                        top_left = (center_x - square_size // 2, center_y - square_size // 2)
-                        bottom_right = (center_x + square_size // 2, center_y + square_size // 2)
-                        cv2.rectangle(rgb_image, top_left, bottom_right, (0, 255, 0), 2)
-
-                        # Display the RGB image with the detected box
-                        cv2.imshow("RGB Image with Detected Cube", rgb_image)
+                    # Get the position of the largest contour (assumed to be the cube)
+                    if contours:
+                        largest_contour = max(contours, key=cv2.contourArea)
+                        x, y, w, h = cv2.boundingRect(largest_contour)
+                        center_x, center_y = x + w // 2, y + h // 2
+                        # Display the original RGB image
+                        cv2.imshow('RGB Image', rgb_image)
                         cv2.waitKey(1)
-                        
-                        # Convert pixel coordinates and depth to 3D world coordinates
-                        X = (center_x - cx) * depth / fx
-                        Y = (center_y - cy) * depth / fy
-                        Z = depth
-                        
-                        # Prepare outgoing message with 3D coordinates
-                        outgoing_message = f"Cube Position: X={X:.2f}, Y={Y:.2f}, Z={Z:.2f}".encode()
 
-                    else:
-                        print("Cube not detected in the image.")
-                else:
-                    print("Cube not detected in the image.")
+                        # Get depth value at the center of the cube
+                        depth_value = depth_image[center_y, center_x]  # Depth at detected cube location
 
-                        # update the information needed for robot motion
-                        # outgoing_message = 'test message'.encode()
-            
+                        # Convert from pixel to 3D coordinates
+                        z = depth_value / 1000.0  # Convert to meters if depth is in millimeters
+                        x_3d = (center_x - cx) * z / fx
+                        y_3d = (center_y - cy) * z / fy
+
+                        # Construct outgoing message with cube position
+                        outgoing_message = f"[{x_3d},{y_3d},{z}]".encode()
+
+
 # ---------------------------------------------------------------------------- #
 #                         ADD YOUR CODE ABOVE THIS LINE                        #
 # ---------------------------------------------------------------------------- #
