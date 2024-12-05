@@ -1321,12 +1321,12 @@ MonoBehaviour:
   selectedJoint: 
   selectedIndex: 0
   control: 0
-  stiffness: 1000
+  stiffness: 10000
   damping: 100
   forceLimit: 1000
-  speed: 0.01
+  speed: 30
   torque: 100
-  acceleration: 0.1
+  acceleration: 10
   highLightColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!114 &309478813
 MonoBehaviour:
@@ -1372,7 +1372,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 309478811}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 40810452e7c5aac40aeb588e8b45e92b, type: 3}
   m_Name: 
@@ -1396,23 +1396,30 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 309478811}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 74a15b01c4f9a6b4b95f8398cb0faa6c, type: 3}
+  m_Script: {fileID: 11500000, guid: 316f390f7ff472b4cb4231bf6095c4eb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   joints:
-  - {fileID: 1073910836}
-  - {fileID: 434695109}
-  - {fileID: 137171190}
-  - {fileID: 1567614140}
-  - {fileID: 1422776436}
-  - {fileID: 1572460555}
+  - {fileID: 1073910834}
+  - {fileID: 434695107}
+  - {fileID: 137171188}
+  - {fileID: 1567614138}
+  - {fileID: 1422776434}
+  - {fileID: 1572460553}
   endEffector: {fileID: 1127218480}
   target: {fileID: 1212395280}
-  tolerance: 0.005
-  maxIterations: 100
-  stepAngle: 1
+  learningRate: 0.1
+  iterations: 100000
+  smoothSpeed: 5
+  jointLimits:
+  - {x: -175, y: 175}
+  - {x: -110, y: 36.68}
+  - {x: -80.07, y: 90}
+  - {x: -175, y: 175}
+  - {x: -100, y: 110}
+  - {x: -147.5, y: 147.5}
 --- !u!1 &334946377
 GameObject:
   m_ObjectHideFlags: 0
